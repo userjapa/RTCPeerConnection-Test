@@ -9,8 +9,15 @@
   },
   "author": "userjapa",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/usuarioJapa/RTCPeerConnection-Test.git"
+    "type": "git",
+    "url": "https://github.com/usuarioJapa/RTCPeerConnection-Test.git"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "http": "^0.0.0",
+    "nodemon": "^1.15.1",
+    "socket.io": "^2.0.4",
+    "webpack": "^3.11.0"
+  }
 }
