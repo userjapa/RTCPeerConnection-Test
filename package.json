@@ -4,8 +4,9 @@
   "description": "RTC Peer Connection Test ",
   "main": "app.jp",
   "scripts": {
-    "start": "node app.js",
-    "dev": "$(npm bin)/nodemon app.js"
+    "start": "npm run build && node app.js",
+    "dev": "npm run build && $(npm bin)/nodemon app.js",
+    "build": "$(npm bin)/webpack"
   },
   "author": "userjapa",
   "repository": {
@@ -14,10 +15,15 @@
   },
   "license": "ISC",
   "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "css-loader": "^0.28.9",
     "express": "^4.16.2",
-    "http": "^0.0.0",
+    "html-webpack-plugin": "^2.30.1",
     "nodemon": "^1.15.1",
+    "raw-loader": "^0.5.1",
     "socket.io": "^2.0.4",
+    "style-loader": "^0.20.2",
     "webpack": "^3.11.0"
   }
 }
