@@ -9,15 +9,18 @@ module.exports = io => {
     // Adding new user to sockets array
     sockets.push(socket.id)
 
-    // Emit new Connection
-    socket.emit('new-connection', {
-      users: sockets
+    // On Ready Stream
+    socket.on('ready', () => {
+      // Emit new Connection
+      socket.emit('new-connection', {
+        users: sockets
+      })
+      // Emit new Connection For All
+      socket.broadcast.emit('new-connection', {
+        users: [socket.id]
+      })
     })
 
-    // Emit new Connection For All
-    socket.broadcast.emit('new-connection', {
-      users: [socket.id]
-    })
 
     // On Disconnection
     socket.on('disconnect', () => {
