@@ -33,6 +33,23 @@ module.exports = io => {
       })
     })
 
+    // Make a Call
+    socket.on('make-call', data => {
+      // Call Made
+      socket.to(data.to).emit('call-made', {
+        to: socket.id
+      })
+    })
+
+    // Answering a Call
+    socket.on('answer-call', data => {
+      // Emit Call Answer
+      socket.to(data.to).emit('call-answer', {
+        answer: data.answer,
+        user: socket.id
+      })
+    })
+
     // Making a Offer
     socket.on('make-offer', data => {
       // Offer Made

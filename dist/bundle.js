@@ -3950,6 +3950,10 @@ pc.ontrack = function (obj) {
     } else {
       video.src = window.URL.createObjectURL;
     }
+    // Disable Button to Add Stream
+    const user = document.getElementById(userId);
+    let button = user.childNodes[0];
+    button.disabled = true;
   } else {
     console.log('User Id is Null: ', userId);
   }
@@ -3996,10 +4000,6 @@ function createOffer(id) {
         offer: offer,
         to: id
       });
-      // Disable Button to Create Offer
-      const user = document.getElementById(id);
-      let button = user.childNodes[0];
-      button.disabled = true;
     }, setLocalDescriptionError);
   }, createOfferError);
 }
@@ -4046,32 +4046,50 @@ socket.on('offer-made', data => {
   }, setRemoteDescriptionError);
 });
 
+// Call Made
+socket.on('call-made', data => {
+  // Accept Call
+  const accept = window.confirm('Accept Call?');
+  socket.emit('answer-call', {
+    to: data.to,
+    answer: accept
+  });
+});
+
+// Call Answer
+socket.on('call-answer', data => {
+  if (data.answer) {
+    createOffer(data.user);
+  }
+});
+
 // On New Connection
 socket.on('new-connection', data => {
   // Add All Users Connected
   for (const x of data.users) {
     // Check if the user isn't you
     if (x !== socket.id) {
-      if (!answers[x]) {
-        let user = document.createElement('div');
-        user.id = x;
-        user.classList.add('item');
-        let button = document.createElement('input');
-        button.type = 'button';
-        button.value = 'Create Offer';
-        // button.onclick = () => {
-        // }
-        user.appendChild(button);
-        let video = document.createElement('video');
-        video.id = `video-${x}`;
-        user.appendChild(video);
-        document.getElementById('screen').appendChild(user);
-        answers[x] = true;
-        setTimeout(() => {
-          // Create Offer to User
-          createOffer(x);
-        }, 2500);
-      }
+      let user = document.createElement('div');
+      user.id = x;
+      user.classList.add('item');
+      let button = document.createElement('input');
+      button.type = 'button';
+      button.value = 'Call User';
+      button.onclick = () => {
+        // Making a Call
+        socket.emit('make-call', {
+          to: x
+        });
+      };
+      user.appendChild(button);
+      let video = document.createElement('video');
+      video.id = `video-${x}`;
+      user.appendChild(video);
+      document.getElementById('screen').appendChild(user);
+      // setTimeout(() => {
+      //   // Create Offer to User
+      //   createOffer(x)
+      // }, 2500)
     }
   }
 });
