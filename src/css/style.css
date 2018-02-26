@@ -22,12 +22,12 @@ html, body {
   flex: flex-grow;
   flex-grow: 1;
   flex-shrink: 1;
-  flex-basis: auto;
+  flex-basis: 600px;
   align-self: center;
 }
 
 video {
   background: #bcbcbc;
   width: 100%;
-  height: 100%;
+  height: auto;
 }

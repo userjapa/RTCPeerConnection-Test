@@ -6,6 +6,7 @@ import io from 'socket.io-client'
 
 // Setting UserID, Answers and Offer
 let answers = {}
+let offers = {}
 let userId = null
 let offer = null
 
@@ -51,20 +52,44 @@ pc.onsignalingstatechange = function (event) {
 // On Add Stream for PC
 pc.ontrack = function (obj) {
   console.log(userId)
-  console.log('Adding Stream')
+  console.log('Adding Streams')
   let video = document.getElementById(`video-${userId}`)
   if (video) {
-    if (video.mozSrcObject) {
-      video.mozSrcObject = obj.stream
+    if (!video.SrcObject || !video.mozSrcObject) {
+      video.src = window.URL.createObjectURL(obj.streams[0])
     } else {
-      video.src = window.URL.createObjectURL
+      if (!video.mozSrcObject) {
+        video.SrcObject = obj.streams[0]
+      } else {
+        video.mozSrcObject = obj.streams[0]
+      }
     }
+    console.log('Added Stream Successfully!')
     // Disable Button to Add Stream
     const user = document.getElementById(userId)
     let button = user.childNodes[0]
     button.disabled = true
+    if (!user.childNodes[2]) {
+      // Add Mute
+      let mute = document.createElement('input')
+      mute.type = 'button'
+      mute.value = 'Mute'
+      mute.onclick = function () {
+        // Mute User
+        const video = this.previousSibling
+        if (video.muted) {
+          this.value = 'Mute'
+          video.muted = false
+        } else {
+          this.value = 'Unmute'
+          video.muted = true
+        }
+      }
+      user.appendChild(mute)
+    }
   } else {
-    console.log('User Id is Null: ', userId)
+    console.log('Failed to Add Stream...')
+    console.warn('User Id is Null: ', userId)
   }
 };
 
@@ -90,7 +115,6 @@ pc.ontrack = function (obj) {
     // Add Stream
     console.log('Added Stream to PeerConnection')
     pc.addStream(stream)
-
     socket.emit('ready')
   } catch (error) {
     console.warn('Failed to Get User Media: ', error)
@@ -99,7 +123,20 @@ pc.ontrack = function (obj) {
 
 // Function to Create Offer
 function createOffer (id) {
+  console.log('Creating Offer...')
+  // Setting User ID
   userId = id
+  // Setting SDP Constraints
+  const spdConstraints = {
+      optional: [{
+          VoiceActivityDetection: false
+      }],
+      mandatory: {
+          OfferToReceiveAudio: true,
+          OfferToReceiveVideo: false
+      }
+  }
+
   // Creating Offer
   pc.createOffer(offer => {
     console.log('Offer Created')
@@ -112,7 +149,7 @@ function createOffer (id) {
         to: id
       })
     }, setLocalDescriptionError)
-  }, createOfferError)
+  }, createOfferError, spdConstraints)
 }
 // End Create Offer
 
@@ -126,7 +163,7 @@ socket.on('answer-made', data => {
     if (!answers[data.socket]) {
       // Create Offer
       createOffer(data.socket)
-      // Set Answer as Active
+      console.log('Answer Setted')
       answers[data.socket] = true
     }
   }, setRemoteDescriptionError)
@@ -138,25 +175,42 @@ socket.on('offer-made', data => {
   offer = data.offer
   // Set User Id
   userId = data.socket
+
+  console.log('Offers: ', offers)
+  console.log('Signaling State: ', pc.signalingState)
+
   // Setting Remote Description
   pc.setRemoteDescription(new SessionDescription(data.offer), function () {
     console.log('Setting Offer as Remote Description')
     // Creating Answer
+    console.log('Creating Answer')
     pc.createAnswer( function (answer) {
-      console.log('Creating Answer')
       // Setting Local Description
+      console.log('Setting Answer as Local Description');
       pc.setLocalDescription(new SessionDescription(answer), function () {
-        console.log('Setting Answer as Local Description');
         // Emit Make Answer
         socket.emit('make-answer', {
           answer: answer,
           to: data.socket
         })
+        // CHECK IF OFFER WAS ALREADY MADE
+        if (!offers[userId]) {
+          // Create Offer
+          createOffer(userId)
+          // Set Offer as Registered
+          offers[userId] = true
+        }
       }, setLocalDescriptionError)
     }, createAnswerError)
   }, setRemoteDescriptionError)
 })
 
+// Call Answer
+socket.on('call-answer', data => {
+  if (data.answer) {
+    createOffer(data.user)
+  }
+})
 
 // Call Made
 socket.on('call-made', data => {
@@ -166,13 +220,6 @@ socket.on('call-made', data => {
     to: data.to,
     answer: accept
   })
-})
-
-// Call Answer
-socket.on('call-answer', data => {
-  if (data.answer) {
-    createOffer(data.user)
-  }
 })
 
 // On New Connection
@@ -198,10 +245,6 @@ socket.on('new-connection', data => {
       video.id = `video-${x}`
       user.appendChild(video)
       document.getElementById('screen').appendChild(user)
-      // setTimeout(() => {
-      //   // Create Offer to User
-      //   createOffer(x)
-      // }, 2500)
     }
   }
 })
@@ -209,6 +252,7 @@ socket.on('new-connection', data => {
 // On User Disconnected
 socket.on('user-disconnected', data => {
   answers[data.id] = false
+  offers[data.id] = false
   const screen = document.getElementById('screen')
   const user = document.getElementById(data.id)
   // Removing User
