@@ -1,6 +1,5 @@
-exports default async function (str) {
+export default async function () {
   try {
-    if (!str || typeof str !== 'object') throw new Error('Argument must be an Array.')
     // Getting Audio and Video
     const stream = await navigator.mediaDevices.getUserMedia(
       {
@@ -8,7 +7,6 @@ exports default async function (str) {
         video: true
       }
     )
-    str.push(str)
     // Adding Stream to HTML5 Video Tag
     const video = document.getElementById('video')
     let camera = document.createElement('video')
@@ -18,9 +16,8 @@ exports default async function (str) {
     video.appendChild(camera)
     camera.play()
 
-    // Add Stream
-    console.log('Added Stream to PeerConnection')
     socket.emit('ready')
+    return stream
   } catch (error) {
     console.warn('Failed to Get User Media: ', error)
   }

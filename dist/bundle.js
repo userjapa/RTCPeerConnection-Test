@@ -3889,10 +3889,18 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__css_style_css___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0__css_style_css__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_socket_io_client__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_socket_io_client__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__user_media__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__error__ = __webpack_require__(53);
 // Importing CSS
 
 
 // Import Socket Client
+
+
+// Import User Media
+
+
+// Import Errors
 
 
 // Setting UserID, Answers and Offer
@@ -3900,31 +3908,14 @@ let answers = {};
 let offers = {};
 let userId = null;
 let offer = null;
+let stream = null;
 
 // Setting RTCPeerConnection and SessionDescription
-const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-const SessionDescription = window.RTCSessionDescription || window.moxRTCSessionDescription || window.webkitRTCSessionDescription;
-
-// ERRORS
-function createOfferError(error) {
-  console.warn('Failed to Create Offer: ', error);
-}
-
-function setLocalDescriptionError(error) {
-  console.warn('Failed to Set Local Description: ', error);
-}
-
-function setRemoteDescriptionError(error) {
-  console.warn('Failed to Set Remote Description: ', error);
-}
-
-function createAnswerError(error) {
-  console.warn('Failed to Create Answer: ', error);
-}
-// END ERRORS
+window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
 // Setting Connection
-const socket = __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default.a.connect(`http://${window.location.host}`);
+window.socket = __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default.a.connect(`http://${window.location.host}`);
 
 // Connected
 socket.on('connect', () => {
@@ -3986,28 +3977,9 @@ pc.ontrack = function (obj) {
 
 // Accessing User Midia
 (async function () {
-  try {
-    // Getting Audio and Video
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true
-    });
-    // Adding Stream to HTML5 Video Tag
-    const video = document.getElementById('video');
-    let camera = document.createElement('video');
-    camera.id = 'camera';
-    camera.muted = true;
-    camera.src = window.URL.createObjectURL(stream);
-    video.appendChild(camera);
-    camera.play();
-
-    // Add Stream
-    console.log('Added Stream to PeerConnection');
-    pc.addStream(stream);
-    socket.emit('ready');
-  } catch (error) {
-    console.warn('Failed to Get User Media: ', error);
-  }
+  console.log(stream);
+  stream = await Object(__WEBPACK_IMPORTED_MODULE_2__user_media__["a" /* default */])();
+  console.log(stream);
 })();
 
 // Function to Create Offer
@@ -4036,8 +4008,8 @@ function createOffer(id) {
         offer: offer,
         to: id
       });
-    }, setLocalDescriptionError);
-  }, createOfferError, spdConstraints);
+    }, __WEBPACK_IMPORTED_MODULE_3__error__["c" /* setLocalDescriptionError */]);
+  }, __WEBPACK_IMPORTED_MODULE_3__error__["b" /* createOfferError */], spdConstraints);
 }
 // End Create Offer
 
@@ -4054,7 +4026,7 @@ socket.on('answer-made', data => {
       console.log('Answer Setted');
       answers[data.socket] = true;
     }
-  }, setRemoteDescriptionError);
+  }, __WEBPACK_IMPORTED_MODULE_3__error__["d" /* setRemoteDescriptionError */]);
 });
 
 // On Offer Made
@@ -4088,9 +4060,9 @@ socket.on('offer-made', data => {
           // Set Offer as Registered
           offers[userId] = true;
         }
-      }, setLocalDescriptionError);
-    }, createAnswerError);
-  }, setRemoteDescriptionError);
+      }, __WEBPACK_IMPORTED_MODULE_3__error__["c" /* setLocalDescriptionError */]);
+    }, __WEBPACK_IMPORTED_MODULE_3__error__["a" /* createAnswerError */]);
+  }, __WEBPACK_IMPORTED_MODULE_3__error__["d" /* setRemoteDescriptionError */]);
 });
 
 // Call Answer
@@ -7982,6 +7954,90 @@ Backoff.prototype.setJitter = function(jitter){
 };
 
 
+
+/***/ }),
+/* 52 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (async function () {
+  try {
+    // Getting Audio and Video
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    });
+    // Adding Stream to HTML5 Video Tag
+    const video = document.getElementById('video');
+    let camera = document.createElement('video');
+    camera.id = 'camera';
+    camera.muted = true;
+    camera.src = window.URL.createObjectURL(stream);
+    video.appendChild(camera);
+    camera.play();
+
+    socket.emit('ready');
+    return stream;
+  } catch (error) {
+    console.warn('Failed to Get User Media: ', error);
+  }
+});
+
+/***/ }),
+/* 53 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__create_offer__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__create_answer__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__set_local_description__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__set_remote_description__ = __webpack_require__(57);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_0__create_offer__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_1__create_answer__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_2__set_local_description__["a"]; });
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_3__set_remote_description__["a"]; });
+
+
+
+
+
+
+
+/***/ }),
+/* 54 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (error => {
+  console.error('Failed to Create Offer: ', error);
+});
+
+/***/ }),
+/* 55 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (error => {
+  console.error('Failed to Create Answer: ', error);
+});
+
+/***/ }),
+/* 56 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (error => {
+  console.error('Failed to Set Local Description: ', error);
+});
+
+/***/ }),
+/* 57 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (error => {
+  console.error('Failed to Set Remote Description: ', error);
+});
 
 /***/ })
 /******/ ]);

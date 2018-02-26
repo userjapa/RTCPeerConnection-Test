@@ -4,36 +4,25 @@ import './../css/style.css'
 // Import Socket Client
 import io from 'socket.io-client'
 
+// Import User Media
+import userMedia from './user-media'
+
+// Import Errors
+import { createOfferError, createAnswerError, setLocalDescriptionError, setRemoteDescriptionError} from './error'
+
 // Setting UserID, Answers and Offer
 let answers = {}
 let offers = {}
 let userId = null
 let offer = null
+let stream = null
 
 // Setting RTCPeerConnection and SessionDescription
-const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
-const SessionDescription = window.RTCSessionDescription || window.moxRTCSessionDescription || window.webkitRTCSessionDescription
-
-// ERRORS
-function createOfferError (error) {
-  console.warn('Failed to Create Offer: ', error)
-}
-
-function setLocalDescriptionError (error) {
-  console.warn('Failed to Set Local Description: ', error)
-}
-
-function setRemoteDescriptionError (error) {
-  console.warn('Failed to Set Remote Description: ', error)
-}
-
-function createAnswerError (error) {
-  console.warn('Failed to Create Answer: ', error)
-}
-// END ERRORS
+window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
+window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription
 
 // Setting Connection
-const socket = io.connect(`http://${window.location.host}`)
+window.socket = io.connect(`http://${window.location.host}`)
 
 // Connected
 socket.on('connect', () => {
@@ -95,31 +84,10 @@ pc.ontrack = function (obj) {
 
 // Accessing User Midia
 (async function () {
-  try {
-    // Getting Audio and Video
-    const stream = await navigator.mediaDevices.getUserMedia(
-      {
-        audio: true,
-        video: true
-      }
-    )
-    // Adding Stream to HTML5 Video Tag
-    const video = document.getElementById('video')
-    let camera = document.createElement('video')
-    camera.id = 'camera'
-    camera.muted = true
-    camera.src = window.URL.createObjectURL(stream)
-    video.appendChild(camera)
-    camera.play()
-
-    // Add Stream
-    console.log('Added Stream to PeerConnection')
-    pc.addStream(stream)
-    socket.emit('ready')
-  } catch (error) {
-    console.warn('Failed to Get User Media: ', error)
-  }
-})()
+  console.log(stream)
+  stream = await userMedia()
+  console.log(stream)
+}())
 
 // Function to Create Offer
 function createOffer (id) {
