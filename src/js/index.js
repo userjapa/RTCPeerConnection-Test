@@ -1,179 +1,42 @@
 // Importing CSS
-import './../css/style.css'
+import './../css/style.css';
 
 // Import Socket Client
-import io from 'socket.io-client'
+import io from 'socket.io-client';
 
 // Import User Media
-import userMedia from './user-media'
+import userMedia from './user-media';
 
-import { createNewConnection } from './peer-connection'
+// Import New Peer Connection and Create Offer
+import { createNewConnection, createOffer } from './peer-connection';
 
-// Import Errors
-import { createOfferError, createAnswerError, setLocalDescriptionError, setRemoteDescriptionError} from './error'
+// Import Socket Events
+import addSocketEvents from './socket'
 
-// Setting UserID, Answers and Offer
-window.answers = {}
-window.offers = {}
-window.userId = null
-window.offer = null
-window.stream = null
-let pc
-
-// Setting RTCPeerConnection and SessionDescription
-window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
-window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription
-window.iceServers = { iceServers: [{ urls: 'stun:stun.services.mozilla.com' }] }
-// Setting Connection
-window.socket = io.connect(`http://${window.location.host}`)
-
-// Connected
-socket.on('connect', () => {
-  console.log(`You're connected!`, socket.id)
-});
-
-// Accessing User Midia
 (async function () {
-  console.log(stream)
-  stream = await userMedia()
-  console.log(stream)
+  // Setting Global Variables
+  window.answerers = {}
+  window.answers = {}
+  window.offerers = {}
+  window.offers = {}
+  window.stream = null
+
+  // Setting RTCPeerConnection and SessionDescription
+  window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
+  window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription
+  window.iceServers = { iceServers: [{ urls: 'stun:stun.services.mozilla.com' }] }
+
+  // Setting Connection
+  window.socket = io.connect(`http://${window.location.host}`)
+
+  // Add Events to Socket
+  addSocketEvents(window.socket)
+
+  // Accessing User Midia
+  try {
+    stream = await userMedia()
+  } catch (error) {
+    console.error(error)
+  }
+  
 }())
-
-// Function to Create Offer
-function createOffer (id) {
-  console.log('Creating Offer...')
-  // Setting User ID
-  userId = id
-  // Setting SDP Constraints
-  const spdConstraints = {
-      optional: [{
-          VoiceActivityDetection: false
-      }],
-      mandatory: {
-          OfferToReceiveAudio: true,
-          OfferToReceiveVideo: false
-      }
-  }
-
-  // Creating Offer
-  pc.createOffer(offer => {
-    console.log('Offer Created')
-    // Setting Local Description
-    pc.setLocalDescription(new SessionDescription(offer), function () {
-      console.log('Setting Offer as Local Description')
-      // Emit Make Offer
-      socket.emit('make-offer', {
-        offer: offer,
-        to: id
-      })
-    }, setLocalDescriptionError)
-  }, createOfferError, spdConstraints)
-}
-// End Create Offer
-
-
-// On Answer Made
-socket.on('answer-made', data => {
-  // Setting Remote Description
-  pc.setRemoteDescription(new SessionDescription(data.answer), function () {
-    console.log('Setting Answer as Remote Description');
-    // Check if answer is active already
-    if (!answers[data.socket]) {
-      // Create Offer
-      createOffer(data.socket)
-      console.log('Answer Setted')
-      answers[data.socket] = true
-    }
-  }, setRemoteDescriptionError)
-})
-
-// On Offer Made
-socket.on('offer-made', data => {
-  // Set Offer
-  offer = data.offer
-  // Set User Id
-  userId = data.socket
-
-  console.log('Offers: ', offers)
-  console.log('Signaling State: ', pc.signalingState)
-
-  // Setting Remote Description
-  pc.setRemoteDescription(new SessionDescription(data.offer), function () {
-    console.log('Setting Offer as Remote Description')
-    // Creating Answer
-    console.log('Creating Answer')
-    pc.createAnswer( function (answer) {
-      // Setting Local Description
-      console.log('Setting Answer as Local Description');
-      pc.setLocalDescription(new SessionDescription(answer), function () {
-        // Emit Make Answer
-        socket.emit('make-answer', {
-          answer: answer,
-          to: data.socket
-        })
-        // CHECK IF OFFER WAS ALREADY MADE
-        if (!offers[userId]) {
-          // Create Offer
-          createOffer(userId)
-          // Set Offer as Registered
-          offers[userId] = true
-        }
-      }, setLocalDescriptionError)
-    }, createAnswerError)
-  }, setRemoteDescriptionError)
-})
-
-// Call Answer
-socket.on('call-answer', data => {
-  if (data.answer) {
-    createOffer(data.user)
-  }
-})
-
-// Call Made
-socket.on('call-made', data => {
-  // Accept Call
-  const accept = window.confirm('Accept Call?')
-  socket.emit('answer-call', {
-    to: data.to,
-    answer: accept
-  })
-})
-
-// On New Connection
-socket.on('new-connection', data => {
-  // Add All Users Connected
-  for (const x of data.users) {
-    // Check if the user isn't you
-    if (x !== socket.id) {
-      pc = createNewConnection(x)
-      let user = document.createElement('div')
-      user.id = x
-      user.classList.add('item')
-      let button = document.createElement('input')
-      button.type = 'button'
-      button.value = 'Call User'
-      button.onclick = () => {
-        // Making a Call
-        socket.emit('make-call', {
-          to: x
-        })
-      }
-      user.appendChild(button)
-      let video = document.createElement('video')
-      video.id = `video-${x}`
-      user.appendChild(video)
-      document.getElementById('screen').appendChild(user)
-    }
-  }
-})
-
-// On User Disconnected
-socket.on('user-disconnected', data => {
-  answers[data.id] = false
-  offers[data.id] = false
-  const screen = document.getElementById('screen')
-  const user = document.getElementById(data.id)
-  // Removing User
-  screen.removeChild(user)
-})

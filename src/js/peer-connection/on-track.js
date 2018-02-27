@@ -1,5 +1,6 @@
 export default function (pc, id) {
   pc.ontrack = function (obj) {
+    console.log(id)
     console.log(`Adding Streams to ${id}`)
     let video = document.getElementById(`video-${id}`)
     if (video) {

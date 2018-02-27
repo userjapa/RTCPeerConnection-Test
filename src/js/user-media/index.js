@@ -20,7 +20,7 @@ export default async function () {
     video.appendChild(camera)
     camera.play()
     // Warn That Your Ready to Stream
-    window.socket.emit('ready')
+    socket.emit('ready')
     return stream
   } catch (error) {
     console.error('Failed to Get User Media: ', error)
