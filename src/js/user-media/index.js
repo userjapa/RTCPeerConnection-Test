@@ -3,7 +3,7 @@ import { userMediaError } from './../error'
 export default async function () {
   try {
     // Check if User Media is Supported
-    if (!window.navigator.mediaDevices && !window.navigator.mediaDevices.getUserMedia) throw userMediaError()
+    if (!window.navigator.mediaDevices || !window.navigator.mediaDevices.getUserMedia) throw userMediaError()
     // Getting Audio and Video
     const stream = await navigator.mediaDevices.getUserMedia(
       {
@@ -19,8 +19,8 @@ export default async function () {
     camera.src = window.URL.createObjectURL(stream)
     video.appendChild(camera)
     camera.play()
-
-    socket.emit('ready')
+    // Warn That Your Ready to Stream
+    window.socket.emit('ready')
     return stream
   } catch (error) {
     console.error('Failed to Get User Media: ', error)

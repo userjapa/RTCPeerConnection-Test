@@ -3913,7 +3913,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_socket_io_client__ = __webpack_require__(30);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_socket_io_client__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__user_media__ = __webpack_require__(53);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__error__ = __webpack_require__(23);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__peer_connection__ = __webpack_require__(59);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__error__ = __webpack_require__(23);
 // Importing CSS
 
 
@@ -3923,80 +3924,30 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // Import User Media
 
 
+
+
 // Import Errors
 
 
 // Setting UserID, Answers and Offer
-let answers = {};
-let offers = {};
-let userId = null;
-let offer = null;
-let stream = null;
+window.answers = {};
+window.offers = {};
+window.userId = null;
+window.offer = null;
+window.stream = null;
+let pc;
 
 // Setting RTCPeerConnection and SessionDescription
 window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
-
-// Setting Connection
-window.socket = __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default.a.connect(`http://${window.location.host}`);
+window.iceServers = { iceServers: [{ urls: 'stun:stun.services.mozilla.com' }]
+  // Setting Connection
+};window.socket = __WEBPACK_IMPORTED_MODULE_1_socket_io_client___default.a.connect(`http://${window.location.host}`);
 
 // Connected
 socket.on('connect', () => {
   console.log(`You're connected!`, socket.id);
 });
-
-// Create new Instance Of PeerConnection
-let pc = new PeerConnection({ iceServers: [{ urls: 'stun:stun.services.mozilla.com' }] });
-
-// Watch Singnaling State
-console.log(pc.signalingState);
-pc.onsignalingstatechange = function (event) {
-  console.log(pc.signalingState);
-};
-
-// On Add Stream for PC
-pc.ontrack = function (obj) {
-  console.log(userId);
-  console.log('Adding Streams');
-  let video = document.getElementById(`video-${userId}`);
-  if (video) {
-    if (!video.SrcObject || !video.mozSrcObject) {
-      video.src = window.URL.createObjectURL(obj.streams[0]);
-    } else {
-      if (!video.mozSrcObject) {
-        video.SrcObject = obj.streams[0];
-      } else {
-        video.mozSrcObject = obj.streams[0];
-      }
-    }
-    console.log('Added Stream Successfully!');
-    // Disable Button to Add Stream
-    const user = document.getElementById(userId);
-    let button = user.childNodes[0];
-    button.disabled = true;
-    if (!user.childNodes[2]) {
-      // Add Mute
-      let mute = document.createElement('input');
-      mute.type = 'button';
-      mute.value = 'Mute';
-      mute.onclick = function () {
-        // Mute User
-        const video = this.previousSibling;
-        if (video.muted) {
-          this.value = 'Mute';
-          video.muted = false;
-        } else {
-          this.value = 'Unmute';
-          video.muted = true;
-        }
-      };
-      user.appendChild(mute);
-    }
-  } else {
-    console.log('Failed to Add Stream...');
-    console.warn('User Id is Null: ', userId);
-  }
-};
 
 // Accessing User Midia
 (async function () {
@@ -4031,8 +3982,8 @@ function createOffer(id) {
         offer: offer,
         to: id
       });
-    }, __WEBPACK_IMPORTED_MODULE_3__error__["c" /* setLocalDescriptionError */]);
-  }, __WEBPACK_IMPORTED_MODULE_3__error__["b" /* createOfferError */], spdConstraints);
+    }, __WEBPACK_IMPORTED_MODULE_4__error__["c" /* setLocalDescriptionError */]);
+  }, __WEBPACK_IMPORTED_MODULE_4__error__["b" /* createOfferError */], spdConstraints);
 }
 // End Create Offer
 
@@ -4049,7 +4000,7 @@ socket.on('answer-made', data => {
       console.log('Answer Setted');
       answers[data.socket] = true;
     }
-  }, __WEBPACK_IMPORTED_MODULE_3__error__["d" /* setRemoteDescriptionError */]);
+  }, __WEBPACK_IMPORTED_MODULE_4__error__["d" /* setRemoteDescriptionError */]);
 });
 
 // On Offer Made
@@ -4083,9 +4034,9 @@ socket.on('offer-made', data => {
           // Set Offer as Registered
           offers[userId] = true;
         }
-      }, __WEBPACK_IMPORTED_MODULE_3__error__["c" /* setLocalDescriptionError */]);
-    }, __WEBPACK_IMPORTED_MODULE_3__error__["a" /* createAnswerError */]);
-  }, __WEBPACK_IMPORTED_MODULE_3__error__["d" /* setRemoteDescriptionError */]);
+      }, __WEBPACK_IMPORTED_MODULE_4__error__["c" /* setLocalDescriptionError */]);
+    }, __WEBPACK_IMPORTED_MODULE_4__error__["a" /* createAnswerError */]);
+  }, __WEBPACK_IMPORTED_MODULE_4__error__["d" /* setRemoteDescriptionError */]);
 });
 
 // Call Answer
@@ -4111,6 +4062,7 @@ socket.on('new-connection', data => {
   for (const x of data.users) {
     // Check if the user isn't you
     if (x !== socket.id) {
+      pc = Object(__WEBPACK_IMPORTED_MODULE_3__peer_connection__["a" /* createNewConnection */])(x);
       let user = document.createElement('div');
       user.id = x;
       user.classList.add('item');
@@ -7989,7 +7941,7 @@ Backoff.prototype.setJitter = function(jitter){
 /* harmony default export */ __webpack_exports__["a"] = (async function () {
   try {
     // Check if User Media is Supported
-    if (!window.navigator.mediaDevices && !window.navigator.mediaDevices.getUserMedia) throw Object(__WEBPACK_IMPORTED_MODULE_0__error__["e" /* userMediaError */])();
+    if (!window.navigator.mediaDevices || !window.navigator.mediaDevices.getUserMedia) throw Object(__WEBPACK_IMPORTED_MODULE_0__error__["e" /* userMediaError */])();
     // Getting Audio and Video
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -8004,7 +7956,7 @@ Backoff.prototype.setJitter = function(jitter){
     video.appendChild(camera);
     camera.play();
 
-    socket.emit('ready');
+    window.socket.emit('ready');
     return stream;
   } catch (error) {
     console.error('Failed to Get User Media: ', error);
@@ -8056,6 +8008,95 @@ Backoff.prototype.setJitter = function(jitter){
 "use strict";
 /* harmony default export */ __webpack_exports__["a"] = (error => {
   console.error('Failed to Set Remote Description: ', error);
+});
+
+/***/ }),
+/* 59 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__create__ = __webpack_require__(60);
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_0__create__["a"]; });
+
+
+
+
+/***/ }),
+/* 60 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__on_signaling_state__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__on_track__ = __webpack_require__(62);
+
+
+
+/* harmony default export */ __webpack_exports__["a"] = (function (id) {
+  let pc = new PeerConnection(iceServers);
+  Object(__WEBPACK_IMPORTED_MODULE_0__on_signaling_state__["a" /* default */])(pc);
+  Object(__WEBPACK_IMPORTED_MODULE_1__on_track__["a" /* default */])(pc, id);
+  return pc;
+});
+
+/***/ }),
+/* 61 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (function (pc) {
+  console.log(pc.signalingState);
+  pc.onsignalingstatechange = function (event) {
+    console.log(pc.signalingState);
+  };
+});
+
+/***/ }),
+/* 62 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony default export */ __webpack_exports__["a"] = (function (pc, id) {
+  pc.ontrack = function (obj) {
+    console.log(`Adding Streams to ${id}`);
+    let video = document.getElementById(`video-${id}`);
+    if (video) {
+      if (!video.SrcObject || !video.mozSrcObject) {
+        video.src = window.URL.createObjectURL(obj.streams[0]);
+      } else {
+        if (!video.mozSrcObject) {
+          video.SrcObject = obj.streams[0];
+        } else {
+          video.mozSrcObject = obj.streams[0];
+        }
+      }
+      console.log('Added Stream Successfully!');
+      // Disable Button to Add Stream
+      const user = document.getElementById(id);
+      let button = user.childNodes[0];
+      button.disabled = true;
+      if (!user.childNodes[2]) {
+        // Add Mute
+        let mute = document.createElement('input');
+        mute.type = 'button';
+        mute.value = 'Mute';
+        mute.onclick = function () {
+          // Mute User
+          const video = this.previousSibling;
+          if (video.muted) {
+            this.value = 'Mute';
+            video.muted = false;
+          } else {
+            this.value = 'Unmute';
+            video.muted = true;
+          }
+        };
+        user.appendChild(mute);
+      }
+    } else {
+      console.log('Failed to Add Stream...');
+      console.warn('User Id is Null: ', id);
+    }
+  };
 });
 
 /***/ })

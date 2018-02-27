@@ -7,80 +7,30 @@ import io from 'socket.io-client'
 // Import User Media
 import userMedia from './user-media'
 
+import { createNewConnection } from './peer-connection'
+
 // Import Errors
 import { createOfferError, createAnswerError, setLocalDescriptionError, setRemoteDescriptionError} from './error'
 
 // Setting UserID, Answers and Offer
-let answers = {}
-let offers = {}
-let userId = null
-let offer = null
-let stream = null
+window.answers = {}
+window.offers = {}
+window.userId = null
+window.offer = null
+window.stream = null
+let pc
 
 // Setting RTCPeerConnection and SessionDescription
 window.PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection
 window.SessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription
-
+window.iceServers = { iceServers: [{ urls: 'stun:stun.services.mozilla.com' }] }
 // Setting Connection
 window.socket = io.connect(`http://${window.location.host}`)
 
 // Connected
 socket.on('connect', () => {
   console.log(`You're connected!`, socket.id)
-})
-
-// Create new Instance Of PeerConnection
-let pc = new PeerConnection({ iceServers: [{ urls: 'stun:stun.services.mozilla.com' }] })
-
-// Watch Singnaling State
-console.log(pc.signalingState)
-pc.onsignalingstatechange = function (event) {
-  console.log(pc.signalingState)
-}
-
-// On Add Stream for PC
-pc.ontrack = function (obj) {
-  console.log(userId)
-  console.log('Adding Streams')
-  let video = document.getElementById(`video-${userId}`)
-  if (video) {
-    if (!video.SrcObject || !video.mozSrcObject) {
-      video.src = window.URL.createObjectURL(obj.streams[0])
-    } else {
-      if (!video.mozSrcObject) {
-        video.SrcObject = obj.streams[0]
-      } else {
-        video.mozSrcObject = obj.streams[0]
-      }
-    }
-    console.log('Added Stream Successfully!')
-    // Disable Button to Add Stream
-    const user = document.getElementById(userId)
-    let button = user.childNodes[0]
-    button.disabled = true
-    if (!user.childNodes[2]) {
-      // Add Mute
-      let mute = document.createElement('input')
-      mute.type = 'button'
-      mute.value = 'Mute'
-      mute.onclick = function () {
-        // Mute User
-        const video = this.previousSibling
-        if (video.muted) {
-          this.value = 'Mute'
-          video.muted = false
-        } else {
-          this.value = 'Unmute'
-          video.muted = true
-        }
-      }
-      user.appendChild(mute)
-    }
-  } else {
-    console.log('Failed to Add Stream...')
-    console.warn('User Id is Null: ', userId)
-  }
-};
+});
 
 // Accessing User Midia
 (async function () {
@@ -196,6 +146,7 @@ socket.on('new-connection', data => {
   for (const x of data.users) {
     // Check if the user isn't you
     if (x !== socket.id) {
+      pc = createNewConnection(x)
       let user = document.createElement('div')
       user.id = x
       user.classList.add('item')
