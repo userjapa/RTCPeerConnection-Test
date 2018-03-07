@@ -7953,9 +7953,11 @@ Backoff.prototype.setJitter = function(jitter){
 /* harmony default export */ __webpack_exports__["a"] = (function (id) {
   answerers[id] = new PeerConnection(iceServers);
   offerers[id] = new PeerConnection(iceServers);
-  Object(__WEBPACK_IMPORTED_MODULE_0__on_signaling_state__["a" /* default */])(answerers[id]);
-  Object(__WEBPACK_IMPORTED_MODULE_0__on_signaling_state__["a" /* default */])(offerers[id]);
+  Object(__WEBPACK_IMPORTED_MODULE_0__on_signaling_state__["a" /* default */])(answerers[id], 'answerer', id);
+  Object(__WEBPACK_IMPORTED_MODULE_0__on_signaling_state__["a" /* default */])(offerers[id], 'offerer', id);
   Object(__WEBPACK_IMPORTED_MODULE_1__on_track__["a" /* default */])(answerers[id], id);
+  Object(__WEBPACK_IMPORTED_MODULE_1__on_track__["a" /* default */])(offerers[id], id);
+  answerers[id].addStream(stream);
   offerers[id].addStream(stream);
   console.log(answerers);
   console.log(offerers);
@@ -7966,10 +7968,10 @@ Backoff.prototype.setJitter = function(jitter){
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony default export */ __webpack_exports__["a"] = (function (pc) {
+/* harmony default export */ __webpack_exports__["a"] = (function (pc, type, id) {
   console.log(pc.signalingState);
   pc.onsignalingstatechange = function (event) {
-    console.log(pc.signalingState);
+    console.log(`${type} ${id} state: `, pc.signalingState);
   };
 });
 
@@ -8090,8 +8092,7 @@ Backoff.prototype.setJitter = function(jitter){
   if (accept) {
     Object(__WEBPACK_IMPORTED_MODULE_0__peer_connection__["a" /* createNewConnection */])(data.to);
     socket.emit('answer-call', {
-      to: data.to,
-      answer: accept
+      to: data.to
     });
   }
 });
@@ -8148,7 +8149,9 @@ Backoff.prototype.setJitter = function(jitter){
         // CHECK IF OFFER WAS ALREADY MADE
         if (!offers[data.socket]) {
           // Create Offer
-          Object(__WEBPACK_IMPORTED_MODULE_0__peer_connection__["b" /* createOffer */])(offerers[data.socket], data.socket);
+          window.setTimeout(() => {
+            Object(__WEBPACK_IMPORTED_MODULE_0__peer_connection__["b" /* createOffer */])(offerers[data.socket], data.socket);
+          }, 2500);
           // Set Offer as Registered
           offers[data.socket] = true;
         }

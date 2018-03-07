@@ -45,7 +45,6 @@ module.exports = io => {
     socket.on('answer-call', data => {
       // Emit Call Answer
       socket.to(data.to).emit('call-answer', {
-        answer: data.answer,
         user: socket.id
       })
     })

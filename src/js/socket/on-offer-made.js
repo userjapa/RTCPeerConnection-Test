@@ -19,7 +19,9 @@ export default data => {
         // CHECK IF OFFER WAS ALREADY MADE
         if (!offers[data.socket]) {
           // Create Offer
-          createOffer(offerers[data.socket], data.socket)
+          window.setTimeout(() => {
+            createOffer(offerers[data.socket], data.socket)
+          }, 2500)
           // Set Offer as Registered
           offers[data.socket] = true
         }

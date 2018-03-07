@@ -1,6 +1,6 @@
-export default function (pc) {
+export default function (pc, type, id) {
   console.log(pc.signalingState)
   pc.onsignalingstatechange = function (event) {
-    console.log(pc.signalingState)
+    console.log(`${type} ${id} state: `, pc.signalingState)
   }
 }

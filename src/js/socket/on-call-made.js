@@ -6,8 +6,7 @@ export default data => {
   if (accept) {
     createNewConnection(data.to)
     socket.emit('answer-call', {
-      to: data.to,
-      answer: accept
+      to: data.to
     })
   }
 }
